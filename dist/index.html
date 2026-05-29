@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fuel ATAN Dashboard</title>
+    <style>
+      :root {
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --text: #18202a;
+        --muted: #5a6a7e;
+        --line: #dbe2ea;
+        --accent: #0f766e;
+        --accent-2: #2563eb;
+        --warn: #b45309;
+        --err: #b91c1c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+        color: var(--text);
+        background: radial-gradient(circle at top right, #e6f7f5 0%, var(--bg) 40%);
+      }
+
+      .app {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 16px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .toolbar,
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+      }
+
+      .title {
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      button,
+      input {
+        height: 34px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--text);
+        padding: 0 10px;
+      }
+
+      button {
+        cursor: pointer;
+        background: var(--accent-2);
+        border-color: var(--accent-2);
+        color: #fff;
+        font-weight: 600;
+      }
+
+      input {
+        min-width: 190px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .kpi {
+        padding: 12px;
+      }
+
+      .kpi .label {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .kpi .value {
+        margin-top: 6px;
+        font-size: 26px;
+        font-weight: 700;
+      }
+
+      .panel {
+        overflow: hidden;
+      }
+
+      .panel-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        font-weight: 600;
+      }
+
+      .panel-body {
+        padding: 10px 12px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+        padding: 8px 6px;
+      }
+
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        font-size: 11px;
+      }
+
+      .lvl-info {
+        border-color: #93c5fd;
+        color: #1d4ed8;
+      }
+
+      .lvl-warn {
+        border-color: #fcd34d;
+        color: var(--warn);
+      }
+
+      .lvl-error {
+        border-color: #fca5a5;
+        color: var(--err);
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      @media (max-width: 980px) {
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .toolbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="toolbar">
+        <div class="title">Fuel ATAN Dashboard</div>
+        <div class="controls">
+          <input id="stationFilter" type="text" placeholder="Фильтр по АЗС/адресу" />
+          <input id="apiKey" type="password" placeholder="API key (optional)" />
+          <button id="refreshBtn" type="button">Обновить</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="panel kpi">
+          <div class="label">Health</div>
+          <div id="healthValue" class="value">-</div>
+        </div>
+        <div class="panel kpi">
+          <div class="label">Станций в snapshot</div>
+          <div id="stationsValue" class="value">-</div>
+        </div>
+        <div class="panel kpi">
+          <div class="label">Лог-записей (последние)</div>
+          <div id="eventsValue" class="value">-</div>
+        </div>
+        <div class="panel kpi">
+          <div class="label">Последнее обновление</div>
+          <div id="updatedValue" class="value" style="font-size: 16px; font-weight: 600;">-</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">Публичный runtime-конфиг</div>
+        <div class="panel-body">
+          <pre id="configJson" class="muted" style="margin: 0; white-space: pre-wrap;">-</pre>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">Последние события/логи</div>
+        <div class="panel-body">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 190px;">Время</th>
+                <th style="width: 90px;">Уровень</th>
+                <th style="width: 260px;">Сообщение</th>
+                <th>Детали</th>
+              </tr>
+            </thead>
+            <tbody id="eventsRows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">Станции (первые 50)</div>
+        <div class="panel-body">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 300px;">АЗС</th>
+                <th>Адрес</th>
+                <th style="width: 120px;">A-92</th>
+                <th style="width: 120px;">A-95</th>
+                <th style="width: 120px;">A-100</th>
+                <th style="width: 120px;">ДТ</th>
+              </tr>
+            </thead>
+            <tbody id="stationsRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const el = {
+        apiKey: document.getElementById("apiKey"),
+        stationFilter: document.getElementById("stationFilter"),
+        refreshBtn: document.getElementById("refreshBtn"),
+        healthValue: document.getElementById("healthValue"),
+        stationsValue: document.getElementById("stationsValue"),
+        eventsValue: document.getElementById("eventsValue"),
+        updatedValue: document.getElementById("updatedValue"),
+        configJson: document.getElementById("configJson"),
+        eventsRows: document.getElementById("eventsRows"),
+        stationsRows: document.getElementById("stationsRows")
+      };
+      let lastSnapshotCache = [];
+
+      function toJson(value) {
+        try {
+          return JSON.stringify(value, null, 2);
+        } catch (_) {
+          return String(value);
+        }
+      }
+
+      function levelClass(level) {
+        if (level === "error" || level === "fatal") {
+          return "lvl-error";
+        }
+        if (level === "warn") {
+          return "lvl-warn";
+        }
+        return "lvl-info";
+      }
+
+      function statusText(value) {
+        if (!value) return "-";
+        if (value === "FUEL_STATUS_IN_STOCK") return "Есть";
+        if (value === "FUEL_STATUS_LIMITED") return "Талоны";
+        return "Нет";
+      }
+
+      async function apiGet(url) {
+        const headers = {};
+        const key = el.apiKey.value.trim();
+        if (key) {
+          headers["x-api-key"] = key;
+        }
+        const response = await fetch(url, { headers });
+        const json = await response.json();
+        if (!response.ok) {
+          throw new Error(`${response.status}: ${json?.error || "Request failed"}`);
+        }
+        return json;
+      }
+
+      function renderEvents(records) {
+        el.eventsRows.innerHTML = "";
+        for (const item of records) {
+          const tr = document.createElement("tr");
+          const extra = item?.extra ? toJson(item.extra) : "";
+          tr.innerHTML = `
+            <td class="muted">${item?.ts || "-"}</td>
+            <td><span class="tag ${levelClass(item?.level)}">${item?.level || "info"}</span></td>
+            <td>${item?.message || "-"}</td>
+            <td class="muted"><pre style="margin:0;white-space:pre-wrap;">${extra}</pre></td>
+          `;
+          el.eventsRows.appendChild(tr);
+        }
+      }
+
+      function renderStations(snapshot) {
+        el.stationsRows.innerHTML = "";
+        const query = el.stationFilter.value.trim().toLowerCase();
+        const filtered = query
+          ? snapshot.filter((station) => `${station.title || ""} ${station.address || ""}`.toLowerCase().includes(query))
+          : snapshot;
+        for (const station of filtered.slice(0, 50)) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${station.title || "-"}</td>
+            <td class="muted">${station.address || "-"}</td>
+            <td>${statusText(station.a92 || station?.fuels?.a92)}</td>
+            <td>${statusText(station.a95 || station?.fuels?.a95)}</td>
+            <td>${statusText(station.a100 || station?.fuels?.a100)}</td>
+            <td>${statusText(station.diesel || station?.fuels?.diesel)}</td>
+          `;
+          el.stationsRows.appendChild(tr);
+        }
+      }
+
+      async function refresh() {
+        el.refreshBtn.disabled = true;
+        try {
+          const [health, config, snapshot, recent] = await Promise.all([
+            apiGet("/health"),
+            apiGet("/config/public"),
+            apiGet("/snapshot/current"),
+            apiGet("/events/recent?limit=30")
+          ]);
+
+          el.healthValue.textContent = health.ok ? "OK" : "DOWN";
+          el.stationsValue.textContent = String(snapshot.stations || 0);
+          el.eventsValue.textContent = String(recent.count || 0);
+          el.updatedValue.textContent = new Date().toLocaleString("ru-RU");
+          el.configJson.textContent = toJson(config.config || {});
+
+          renderEvents(recent.records || []);
+          lastSnapshotCache = Array.isArray(snapshot.snapshot) ? snapshot.snapshot : [];
+          renderStations(lastSnapshotCache);
+        } catch (error) {
+          el.healthValue.textContent = "ERR";
+          el.updatedValue.textContent = error instanceof Error ? error.message : String(error);
+        } finally {
+          el.refreshBtn.disabled = false;
+        }
+      }
+
+      el.refreshBtn.addEventListener("click", refresh);
+      el.stationFilter.addEventListener("input", () => {
+        renderStations(lastSnapshotCache);
+      });
+      refresh();
+    </script>
+  </body>
+</html>
