@@ -81,6 +81,9 @@ npm run pm2:restart
 - `NOTIFY_TARGET_STATUSES` - массив статусов, при переходе в которые отправляется уведомление, пример: `["FUEL_STATUS_IN_STOCK"]`.
 - `MAP_OUTPUT_FILE` - путь, куда сохраняется SVG-карта с отмеченными АЗС.
 - `MAP_ATTACH_ENABLED` - прикладывать ли карту к уведомлению в Telegram.
+- `FILE_LOGGING_ENABLED` - писать ли JSON-логи в файлы (`true/false`).
+- `LOG_DIR` - директория для daily логов (по умолчанию `./data/logs`).
+- `LOG_RETENTION_DAYS` - сколько дней хранить лог-файлы (по умолчанию `2`).
 
 ## Структура документации
 - Проектная цель и контекст: `agency.md`
