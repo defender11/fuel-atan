@@ -9,6 +9,12 @@
 - `apps/monitor` — опрос ATAN, сравнение snapshot, отправка Telegram.
 - `apps/api` — HTTP API для dashboard и интеграций.
 - `apps/dashboard` — UI дашборда (получает данные только через API).
+- Dashboard (SPA):
+- разделы: `Stations`, `Logs`, `Settings`;
+- тултипы на ключевых элементах UI;
+- легенда статусов топлива + цветные индикаторы в таблице;
+- автообновление данных через select (`0/3/5/15/30` сек) с мини-прогрессом цикла;
+- выбор темы `Системная/Светлая/Темная` (сохранение локально в браузере).
 - Опрос API: каждые `POLL_INTERVAL_MS` миллисекунд.
 - Endpoint: `POST https://api.fuel-status.atan.ru/gasstations.Edge/ListGasStationsForMap`.
 - Фильтрация по городам: `CITY_FILTERS` + `CITY_FILTER_MODE` (`segment`/`contains`).
@@ -75,6 +81,9 @@
 - `npm run build`
 - `npm run pm2:start:all`
 - `npm run pm2:logs:all`
+- Docker:
+- `docker/README.md` (сборка, запуск, обновление, остановка через Docker Compose).
+- Быстрый Docker старт: `./docker/up.sh` (поднимает `monitor + api`, с авто-рестартами через `restart: always`).
 
 ## План развития
 - Актуальный поэтапный план разделения, API и dashboard: `PLAN.md`.

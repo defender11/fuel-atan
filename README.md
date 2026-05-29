@@ -113,9 +113,20 @@ Dashboard доступен по адресу:
 
 Если задан `API_KEY`, для endpoint-ов кроме `/health` нужно передавать header `x-api-key`.
 
+## Docker запуск
+- Быстрый запуск стека: `./docker/up.sh`
+- Compose-файл: `docker/docker-compose.yml`
+- Подробная инструкция: `docker/README.md`
+
 ## Dashboard
 - Исходники UI: `apps/dashboard/index.html`.
 - Dashboard работает только через API.
+- Разделы SPA: `Stations`, `Logs`, `Settings`.
+- Автообновление данных через Bootstrap select: `Выключить / 3 / 5 / 15 / 30 секунд`.
+- Для автообновления показывается мини-прогресс цикла и обратный отсчет до следующего обновления.
+- Переключение темы в `Settings`: `Системная / Светлая / Темная` (сохранение выбора в `localStorage`).
+- Для основных контролов, меню, статусов и таблиц включены tooltip-подсказки.
+- В таблице топлива статусы отображаются цветными кружками по легенде.
 - Локальные URL:
 - `http://localhost:4010/`
 - `http://localhost:4010/dashboard`
@@ -175,4 +186,5 @@ npm run start:dist:api
 - Контракт API: `API_CONTRACT.md`
 - Эксплуатация и cron: `OPERATIONS.md`
 - Runbook эксплуатации: `docs/RUNBOOK.md`
+- Docker деплой и запуск: `docker/README.md`
 - Пример ответа API: `response.md`
