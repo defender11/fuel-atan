@@ -1,0 +1,63 @@
+# Docker Deployment
+
+## Что в папке
+- `Dockerfile` — multi-stage сборка с генерацией `dist/*`.
+- `docker-compose.yml` — запуск двух сервисов: `monitor` и `api`.
+
+## Требования
+- Docker Engine 24+
+- Docker Compose v2+
+
+## Подготовка
+1. Проверьте `.env.base` и `.env.local` в корне проекта.
+2. Убедитесь, что корректно заданы:
+- `ATAN_API_URL`
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHAT_ID`
+
+## Сборка и запуск
+Из корня проекта:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d --build
+```
+
+Или через готовый скрипт:
+
+```bash
+./docker/up.sh
+```
+
+Проверка:
+
+```bash
+docker compose -f docker/docker-compose.yml ps
+docker compose -f docker/docker-compose.yml logs -f
+```
+
+Dashboard/API:
+- `http://localhost:4010/`
+- `http://localhost:4010/dashboard`
+
+## Остановка и удаление
+```bash
+docker compose -f docker/docker-compose.yml down
+```
+
+С удалением образа и volume:
+```bash
+docker compose -f docker/docker-compose.yml down --rmi local -v
+```
+
+## Обновление версии
+После изменений в коде:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d --build
+```
+
+## Примечания
+- Контейнеры читают env через `env_file` (`.env.base` + `.env.local`).
+- `data/` смонтирована как volume `../data:/app/data` для сохранения state и логов.
+- `api` использует `DASHBOARD_FILE=/app/dist/index.html`.
+- `restart: always` у обоих сервисов включает автоподнятие контейнеров после рестарта Docker/хоста.

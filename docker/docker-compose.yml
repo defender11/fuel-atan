@@ -1,0 +1,42 @@
+services:
+  monitor:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: fuel-atan:latest
+    container_name: fuel-atan-monitor
+    command: ["node", "dist/monitor.js"]
+    restart: always
+    init: true
+    env_file:
+      - ../.env.base
+      - ../.env.local
+    volumes:
+      - ../data:/app/data
+
+  api:
+    image: fuel-atan:latest
+    container_name: fuel-atan-api
+    command: ["node", "dist/api.js"]
+    restart: always
+    init: true
+    depends_on:
+      monitor:
+        condition: service_started
+    env_file:
+      - ../.env.base
+      - ../.env.local
+    environment:
+      DASHBOARD_FILE: /app/dist/index.html
+      API_HOST: 0.0.0.0
+      API_PORT: 4010
+    ports:
+      - "4010:4010"
+    volumes:
+      - ../data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4010/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 10s
