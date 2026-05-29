@@ -1,0 +1,24 @@
+{
+  "name": "fuel-atan-monitor",
+  "version": "0.1.0",
+  "description": "ATAN fuel availability monitor with Telegram notifications",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "start:fresh": "node reset-state.js && node index.js",
+    "dev": "npx nodemon index.js",
+    "check": "node --check index.js && node --check test-telegram.js && node --check generate-map.js && node --check reset-state.js",
+    "test-telegram": "node test-telegram.js",
+    "map:generate": "node generate-map.js",
+    "pm2:start": "pm2 start index.js --name fuel-atan",
+    "pm2:restart": "pm2 restart fuel-atan",
+    "pm2:logs": "pm2 logs fuel-atan",
+    "pm2:stop": "pm2 stop fuel-atan",
+    "pm2:delete": "pm2 delete fuel-atan",
+    "pm2:save": "pm2 save"
+  },
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  }
+}
