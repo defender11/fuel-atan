@@ -52,3 +52,6 @@
 - `npm run start:fresh` — сброс state текущего `chat+bot` и запуск.
 - `npm run test-telegram` — тест отправки в Telegram.
 - `npm run map:generate` — генерация локальной SVG-карты в `data/`.
+
+## План развития
+- Актуальный поэтапный план разделения, API и dashboard: `PLAN.md`.
