@@ -3,6 +3,7 @@
 ## Что в папке
 - `Dockerfile` — multi-stage сборка с генерацией `dist/*`.
 - `docker-compose.yml` — запуск двух сервисов: `monitor` и `api`.
+- `tg-*.sh` — короткие команды для Telegram-чекалки.
 
 ## Требования
 - Docker Engine 24+
@@ -14,6 +15,24 @@
 - `ATAN_API_URL`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
+
+## Основные команды через Make
+На сервере npm не нужен. Из корня проекта:
+
+```bash
+make tg-up      # запустить/пересобрать Telegram-чекалку
+make tg-logs    # смотреть логи чекалки
+make tg-down    # остановить чекалку
+make tg-test    # отправить тестовое сообщение в Telegram
+```
+
+Полная связка с API/dashboard:
+
+```bash
+make up
+make logs
+make down
+```
 
 ## Сборка и запуск полной связки
 Из корня проекта:
@@ -43,32 +62,40 @@ Dashboard/API:
 Если нужен только мониторинг ATAN -> Telegram без API и dashboard:
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d --build --no-deps monitor
+make tg-up
 ```
 
-Или через отдельный скрипт:
+Или через прямой скрипт:
 
 ```bash
-./docker/up-monitor.sh
+./docker/tg-up.sh
+```
+
+Низкоуровневая команда Compose:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d --build --no-deps monitor
 ```
 
 Логи чекалки:
 
 ```bash
-docker compose -f docker/docker-compose.yml logs -f monitor
+make tg-logs
 ```
 
 Тестовое сообщение в Telegram без запуска постоянной чекалки:
 
 ```bash
-./docker/test-telegram.sh
+make tg-test
 ```
 
 Остановить только чекалку:
 
 ```bash
-docker compose -f docker/docker-compose.yml stop monitor
+make tg-down
 ```
+
+Прямые скрипты остаются доступны: `./docker/tg-up.sh`, `./docker/tg-logs.sh`, `./docker/tg-test.sh`, `./docker/tg-down.sh`.
 
 ## Остановка и удаление
 ```bash
@@ -90,7 +117,7 @@ docker compose -f docker/docker-compose.yml up -d --build
 Если нужна только Telegram-чекалка:
 
 ```bash
-./docker/up-monitor.sh
+make tg-up
 ```
 
 ## Примечания

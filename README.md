@@ -6,28 +6,37 @@
 - Получает список АЗС через API.
 - Сравнивает текущие статусы топлива с предыдущим снимком.
 - Отправляет уведомление только при целевом переходе статуса.
-- Работает по расписанию (по умолчанию каждую минуту).
+- Работает по расписанию (в базовом конфиге каждые 90 секунд).
 - По умолчанию целевой статус уведомления: `FUEL_STATUS_IN_STOCK`.
 - При множественных событиях за цикл отправляет одно агрегированное сообщение (если длинное, делит на части).
 - В уведомлениях статусы выводятся в человекочитаемом виде ("Есть", "Талоны", "Нет").
 - Перед текстом отправляет карту с отмеченными АЗС (если `MAP_ATTACH_ENABLED=true`) и легендой в подписи.
 
 ## Требования
-- Node.js 18+
+- Node.js 18+ для локального запуска без Docker.
+- Docker Engine 24+ и Docker Compose v2 для серверного запуска.
+- `make` для коротких серверных команд.
 
-## Быстрый запуск
+## Быстрый запуск Telegram-чекалки на сервере
 1. Заполнить `.env.base` базовыми значениями проекта.
 2. В `.env.local` указывать локальные/секретные значения (они переопределяют `.env.base`).
 3. Заполнить `TELEGRAM_BOT_TOKEN` и `TELEGRAM_CHAT_ID` в `.env.local`.
-4. Запустить монитор.
+4. Проверить отправку в Telegram и запустить чекалку.
 
 ```bash
-npm install
-npm run start
-npm run start:api
+make tg-test
+make tg-up
+make tg-logs
 ```
 
-### Как запускать все сервисы
+Остановить только Telegram-чекалку:
+```bash
+make tg-down
+```
+
+`monitor` в Docker Compose — это Telegram-чекалка. Веб/API сервис называется `api`.
+
+### Локальный запуск без Docker
 - Из исходников:
 ```bash
 npm install
@@ -73,6 +82,11 @@ npm run build
 npm run test-telegram
 ```
 
+Проверка Telegram через Docker без локального Node/npm:
+```bash
+make tg-test
+```
+
 Запуск с автоперезапуском в разработке:
 ```bash
 npm run dev
@@ -114,7 +128,9 @@ Dashboard доступен по адресу:
 Если задан `API_KEY`, для endpoint-ов кроме `/health` нужно передавать header `x-api-key`.
 
 ## Docker запуск
-- Быстрый запуск стека: `./docker/up.sh`
+- Telegram-чекалка: `make tg-up`, `make tg-logs`, `make tg-down`, `make tg-test`.
+- Полный стек `monitor + api`: `make up`.
+- Быстрый запуск полного стека: `./docker/up.sh`.
 - Compose-файл: `docker/docker-compose.yml`
 - Подробная инструкция: `docker/README.md`
 
@@ -140,6 +156,7 @@ npm run build
 Результат в `dist/`:
 - `dist/monitor.js` — single-file bundle monitor.
 - `dist/api.js` — single-file bundle API.
+- `dist/test-telegram.js` — single-file Telegram test runner для Docker.
 - `dist/index.html` — single-file dashboard.
 
 Запуск dist-артефактов:
@@ -155,8 +172,8 @@ npm run start:dist:api
 
 ## Переменные окружения
 - `ATAN_API_URL` - URL API ATAN.
-- `POLL_INTERVAL_MS` - интервал опроса в миллисекундах (по умолчанию `60000`).
-- `REQUEST_TIMEOUT_MS` - таймаут запроса к API.
+- `POLL_INTERVAL_MS` - интервал опроса в миллисекундах (по умолчанию в конфиге `90000`).
+- `REQUEST_TIMEOUT_MS` - таймаут запроса к API (по умолчанию в конфиге `45000`).
 - `TELEGRAM_BOT_TOKEN` - токен Telegram-бота.
 - `TELEGRAM_CHAT_ID` - chat id для уведомлений.
 - `STATE_FILE` - путь к файлу состояния, например `./data/state.json`.

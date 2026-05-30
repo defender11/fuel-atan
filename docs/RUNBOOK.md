@@ -1,9 +1,23 @@
 # Runbook
 
 ## Предусловия
-- Node.js 18+.
 - Настроены `.env.base` и `.env.local`.
-- Доступны `pm2` и `npm`.
+- Для серверного Docker-запуска доступны Docker Engine 24+, Docker Compose v2 и `make`.
+- Для локального Node/PM2-запуска доступны Node.js 18+, `npm` и `pm2`.
+
+## Серверный Docker-запуск Telegram-чекалки
+- Тест Telegram: `make tg-test`
+- Запуск/пересборка: `make tg-up`
+- Логи: `make tg-logs`
+- Остановка: `make tg-down`
+
+`monitor` в Compose — это Telegram-чекалка. `api` — веб/API/дашборд.
+
+## Серверный Docker-запуск полного стека
+- Запуск/пересборка `monitor + api`: `make up`
+- Статус сервисов: `make ps`
+- Логи всех сервисов: `make logs`
+- Остановка и удаление stack: `make down`
 
 ## Локальный запуск (source)
 - Monitor: `npm run start`
@@ -32,3 +46,4 @@
 - Полный CI-цикл локально: `npm run ci`
 - Health endpoint API: `GET /health`
 - Логи monitor: JSON в `stdout` и daily-файлы в `LOG_DIR`.
+- Логи Docker TG-чекалки: `make tg-logs`.

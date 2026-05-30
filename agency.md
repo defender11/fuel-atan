@@ -60,6 +60,11 @@
 - `LOG_RETENTION_DAYS` — хранение логов в днях (по умолчанию `2`).
 
 ## Полезные команды
+- `make tg-up` — серверный запуск/пересборка Telegram-чекалки через Docker.
+- `make tg-logs` — логи Telegram-чекалки.
+- `make tg-down` — остановка Telegram-чекалки.
+- `make tg-test` — тест отправки сообщения в Telegram через Docker.
+- `make up` — запуск полного Docker-стека `monitor + api`.
 - `npm run start` — обычный запуск.
 - `npm run start:api` — запуск встроенного API.
 - `npm run build` — сборка single-file артефактов в `dist/`.
@@ -83,7 +88,8 @@
 - `npm run pm2:logs:all`
 - Docker:
 - `docker/README.md` (сборка, запуск, обновление, остановка через Docker Compose).
-- Быстрый Docker старт: `./docker/up.sh` (поднимает `monitor + api`, с авто-рестартами через `restart: always`).
+- Telegram-чекалка: `make tg-up`, `make tg-logs`, `make tg-down`, `make tg-test`.
+- Полный Docker старт: `make up` или `./docker/up.sh` (поднимает `monitor + api`, с авто-рестартами через `restart: always`).
 
 ## План развития
 - Актуальный поэтапный план разделения, API и dashboard: `PLAN.md`.

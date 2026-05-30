@@ -90,7 +90,7 @@ fuel-atan/
 - добавить команды `build:*` в `package.json`.
 - Прогресс:
 - добавлен сборщик `scripts/build-artifacts.js`;
-- формируются артефакты `dist/monitor.js`, `dist/api.js`, `dist/index.html`;
+- формируются артефакты `dist/monitor.js`, `dist/api.js`, `dist/test-telegram.js`, `dist/index.html`;
 - добавлены команды `npm run build`, `npm run start:dist:monitor`, `npm run start:dist:api`.
 - Критерий завершения:
 - сборка повторяемая и запускается на чистом окружении;
@@ -110,6 +110,8 @@ fuel-atan/
 - добавлен smoke-тест API `scripts/smoke-api.js`;
 - добавлен PM2 ecosystem `ecosystem.config.cjs` для `monitor + api`;
 - добавлены команды `pm2:start:all`, `pm2:restart:all`, `pm2:stop:all`, `pm2:delete:all`;
+- добавлены Docker/Make команды для серверного запуска Telegram-чекалки: `make tg-up`, `make tg-logs`, `make tg-down`, `make tg-test`;
+- добавлены shell-скрипты `docker/tg-up.sh`, `docker/tg-logs.sh`, `docker/tg-down.sh`, `docker/tg-test.sh`;
 - добавлен runbook `docs/RUNBOOK.md`.
 - Критерий завершения:
 - полный цикл `check + build + run` автоматизирован;
