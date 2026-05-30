@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fuel ATAN Dashboard</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      crossorigin="anonymous"
+    />
+    <style>
+      :root {
+        --app-bg: #f4f7fb;
+        --panel-bg: #ffffff;
+        --line: #dbe2ea;
+        --text-soft: #6b7280;
+      }
+
+      html[data-bs-theme="dark"] {
+        --app-bg: #0f172a;
+        --panel-bg: #111827;
+        --line: #334155;
+        --text-soft: #9ca3af;
+      }
+
+      body {
+        background: linear-gradient(180deg, #eef6ff 0%, var(--app-bg) 30%);
+      }
+
+      html[data-bs-theme="dark"] body {
+        background: linear-gradient(180deg, #0b1220 0%, var(--app-bg) 30%);
+      }
+
+      .app-shell {
+        max-width: 1400px;
+      }
+
+      .dashboard-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 248px) minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+      }
+
+      .dashboard-layout.sidebar-collapsed {
+        grid-template-columns: minmax(0, 72px) minmax(0, 1fr);
+      }
+
+      .content-column {
+        min-width: 0;
+      }
+
+      .content-column main {
+        min-width: 0;
+      }
+
+      .sidebar {
+        border: 1px solid var(--line);
+        background: var(--panel-bg);
+        border-radius: 0.75rem;
+        padding: 0.75rem;
+        position: sticky;
+        top: 12px;
+        align-self: start;
+        width: 100%;
+        min-width: 0;
+        transition: padding 0.2s ease;
+      }
+
+      .sidebar-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        padding: 0.35rem 0.5rem 0.75rem;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .sidebar-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+
+      .sidebar-toggle {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        padding-top: 0.65rem;
+      }
+
+      .sidebar-nav .route-link {
+        border-radius: 0.6rem;
+        padding: 0.55rem 0.7rem;
+        color: var(--bs-body-color);
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        white-space: nowrap;
+      }
+
+      .sidebar-nav .route-link:hover {
+        background: #eef4ff;
+      }
+
+      .sidebar-nav .route-link.active {
+        background: #e8f0ff;
+        font-weight: 600;
+      }
+
+      html[data-bs-theme="dark"] .sidebar-nav .route-link.active {
+        background: #1e293b;
+      }
+
+      html[data-bs-theme="dark"] .sidebar-nav .route-link:hover {
+        background: #1f2937;
+      }
+
+      .sidebar-icon {
+        width: 17px;
+        height: 17px;
+      }
+
+      .sidebar.collapsed {
+        padding-inline: 0.35rem;
+      }
+
+      .sidebar.collapsed .sidebar-title {
+        display: none;
+      }
+
+      .sidebar.collapsed .sidebar-nav .route-label {
+        display: none;
+      }
+
+      .sidebar.collapsed .sidebar-nav .route-link {
+        justify-content: center;
+        padding-inline: 0.35rem;
+      }
+
+      .sidebar.collapsed .sidebar-head {
+        justify-content: center;
+      }
+
+      .sidebar.collapsed .sidebar-toggle {
+        margin-inline: auto;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        background: var(--panel-bg);
+      }
+
+      .top-control-panel {
+        position: sticky;
+        top: 12px;
+        z-index: 1030;
+        width: min(100%, 1080px);
+      }
+
+      .panel-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      .kpi-value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        line-height: 1.1;
+      }
+
+      .soft {
+        color: var(--text-soft);
+      }
+
+      .chart-wrap {
+        min-height: 260px;
+      }
+
+      .chart-wrap canvas {
+        max-height: 260px;
+      }
+
+      .table-fixed th {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 2;
+      }
+
+      html[data-bs-theme="dark"] .table-fixed th {
+        background: #111827;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+      }
+
+      .logs-scroll {
+        max-height: 62vh;
+        overflow-y: auto;
+      }
+
+      #logsRows pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        margin: 0;
+      }
+
+      .section-hidden {
+        display: none;
+      }
+
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        display: inline-block;
+      }
+
+      .dot-ok {
+        background: #16a34a;
+      }
+
+      .dot-warn {
+        background: #f59e0b;
+      }
+
+      .dot-bad {
+        background: #dc2626;
+      }
+
+      .fuel-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1rem;
+        margin-top: 0.5rem;
+      }
+
+      .fuel-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--text-soft);
+        font-size: 0.87rem;
+      }
+
+      .fuel-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      .fuel-dot-stock {
+        background: #16a34a;
+      }
+
+      .fuel-dot-limited {
+        background: #f59e0b;
+      }
+
+      .fuel-dot-out {
+        background: #dc2626;
+      }
+
+      .fuel-dot-na {
+        background: #94a3b8;
+      }
+
+      .fuel-cell {
+        text-align: center;
+      }
+
+      .auto-refresh-progress {
+        height: 5px;
+      }
+
+      .auto-refresh-progress .progress-bar {
+        transition: width 0.15s linear;
+      }
+
+      @media (max-width: 1199.98px) {
+        .dashboard-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .dashboard-layout.sidebar-collapsed {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: sticky;
+          top: 8px;
+          padding: 0.6rem;
+          z-index: 1030;
+        }
+
+        .sidebar-head {
+          display: none;
+        }
+
+        .sidebar-nav {
+          flex-direction: row;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          padding-top: 0;
+          gap: 0.45rem;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .sidebar-nav .route-link {
+          flex: 0 0 auto;
+          border: 1px solid var(--line);
+          padding: 0.5rem 0.7rem;
+        }
+
+        .sidebar.collapsed .sidebar-title {
+          display: none;
+        }
+
+        .sidebar.collapsed .sidebar-nav .route-label {
+          display: inline;
+        }
+
+        .sidebar.collapsed .sidebar-nav .route-link {
+          justify-content: flex-start;
+          padding-inline: 0.7rem;
+        }
+
+        .top-control-panel {
+          width: 100%;
+          top: 8px;
+        }
+
+        .kpi-value {
+          font-size: 1.35rem;
+        }
+      }
+
+      @media (max-width: 575.98px) {
+        .app-shell {
+          padding-left: 0.35rem;
+          padding-right: 0.35rem;
+        }
+
+        .sidebar-nav .route-link {
+          min-width: 108px;
+          justify-content: center;
+        }
+
+        .top-control-panel {
+          border-radius: 0.6rem;
+        }
+
+        .top-control-panel .row {
+          --bs-gutter-x: 0.5rem;
+        }
+
+        .chart-wrap {
+          min-height: 210px;
+        }
+
+        .chart-wrap canvas {
+          max-height: 210px;
+        }
+
+        .logs-scroll {
+          max-height: none;
+        }
+
+        .table {
+          font-size: 0.86rem;
+        }
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid py-3 app-shell">
+      <div id="dashboardLayout" class="dashboard-layout">
+        <aside id="sidebar" class="sidebar">
+          <div class="sidebar-head mb-1">
+            <div class="sidebar-title mb-0">Fuel ATAN Dashboard</div>
+            <button
+              id="sidebarToggleBtn"
+              type="button"
+              class="btn btn-outline-secondary btn-sm sidebar-toggle"
+              title="Свернуть меню"
+              data-bs-toggle="tooltip"
+              data-bs-placement="right"
+            >
+              <i data-lucide="panel-left-close" class="sidebar-icon"></i>
+            </button>
+          </div>
+          <nav class="sidebar-nav">
+            <a
+              class="nav-link route-link active"
+              href="#/stations"
+              data-route="stations"
+              data-bs-toggle="tooltip"
+              data-bs-placement="right"
+              title="Список заправок"
+            >
+              <i data-lucide="fuel" class="sidebar-icon"></i>
+              <span class="route-label">Stations</span>
+            </a>
+            <a
+              class="nav-link route-link"
+              href="#/logs"
+              data-route="logs"
+              data-bs-toggle="tooltip"
+              data-bs-placement="right"
+              title="Логи и графики"
+            >
+              <i data-lucide="logs" class="sidebar-icon"></i>
+              <span class="route-label">Logs</span>
+            </a>
+            <a
+              class="nav-link route-link"
+              href="#/settings"
+              data-route="settings"
+              data-bs-toggle="tooltip"
+              data-bs-placement="right"
+              title="Настройки интерфейса и runtime"
+            >
+              <i data-lucide="sliders-horizontal" class="sidebar-icon"></i>
+              <span class="route-label">Settings</span>
+            </a>
+          </nav>
+        </aside>
+
+        <div class="d-flex flex-column gap-3 content-column">
+          <section class="panel rounded-3 p-3 top-control-panel">
+          <div class="row g-2 mx-0 align-items-end">
+            <div class="col-12 col-xl-5">
+              <label for="stationFilter" class="form-label small soft mb-1">Фильтр станций</label>
+              <div class="input-group">
+                  <span class="input-group-text" title="Поиск по id, uuid, названию, адресу и статусам" data-bs-toggle="tooltip">Поиск</span>
+                  <input
+                    id="stationFilter"
+                    type="text"
+                    class="form-control"
+                    placeholder="id, uuid, название, адрес, статус"
+                    title="Фильтрация таблицы в реальном времени"
+                    data-bs-toggle="tooltip"
+                  />
+                  <button id="clearFilterBtn" class="btn btn-outline-secondary" type="button" title="Очистить фильтр" data-bs-toggle="tooltip">Сброс</button>
+                </div>
+              </div>
+            <div class="col-6 col-md-3 col-xl-2">
+              <label class="form-label small soft mb-1">Станций всего</label>
+              <div id="stationsTotal" class="kpi-value">-</div>
+            </div>
+            <div class="col-6 col-md-3 col-xl-2">
+              <label class="form-label small soft mb-1">По фильтру</label>
+              <div id="stationsFiltered" class="kpi-value">-</div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3 d-grid">
+              <button id="refreshBtn" class="btn btn-primary" title="Запросить данные с API сейчас" data-bs-toggle="tooltip">Обновить данные</button>
+            </div>
+          </div>
+          <div class="row g-2 mt-1 mx-0">
+            <div class="col-12 col-xl-5">
+              <label for="autoRefreshSelect" class="form-label small soft mb-1">Автообновление</label>
+              <select id="autoRefreshSelect" class="form-select form-select-sm" title="Интервал автоматического обновления данных" data-bs-toggle="tooltip">
+                <option value="0">Выключить</option>
+                <option value="3">3 секунды</option>
+                <option value="5">5 секунд</option>
+                <option value="15">15 секунд</option>
+                <option value="30">30 секунд</option>
+              </select>
+              <div class="progress auto-refresh-progress mt-1" role="progressbar" aria-label="Прогресс автообновления">
+                <div id="autoRefreshProgress" class="progress-bar bg-info" style="width: 0%"></div>
+              </div>
+              <div id="autoRefreshHint" class="small soft mt-1">Автообновление выключено</div>
+            </div>
+            <div class="col-6 col-xl-3">
+              <label for="themeSelectQuick" class="form-label small soft mb-1">Тема</label>
+              <select id="themeSelectQuick" class="form-select form-select-sm" title="Быстрое переключение темы" data-bs-toggle="tooltip">
+                <option value="system">Системная</option>
+                <option value="light">Светлая</option>
+                <option value="dark">Темная</option>
+              </select>
+            </div>
+            <div class="col-6 col-xl-4 d-flex align-items-end">
+              <div id="themeHintTop" class="small soft">Активная тема: системная</div>
+            </div>
+          </div>
+          <div class="mt-2 small soft">
+            Обновлено: <span id="updatedAt">-</span>
+            <span class="mx-2">•</span>
+            API health:
+            <span id="healthDot" class="status-dot dot-warn" title="Состояние API" data-bs-toggle="tooltip"></span>
+            <span id="healthText" title="Состояние API" data-bs-toggle="tooltip">-</span>
+          </div>
+          <div class="fuel-legend" aria-label="Легенда статусов топлива">
+            <div class="fuel-legend-item" title="FUEL_STATUS_IN_STOCK" data-bs-toggle="tooltip"><span class="fuel-dot fuel-dot-stock"></span>Все виды оплат</div>
+            <div class="fuel-legend-item" title="FUEL_STATUS_LIMITED" data-bs-toggle="tooltip"><span class="fuel-dot fuel-dot-limited"></span>Талоны и топливные карты</div>
+            <div class="fuel-legend-item" title="FUEL_STATUS_OUT_OF_STOCK / FUEL_STATUS_UNAVAILABLE" data-bs-toggle="tooltip"><span class="fuel-dot fuel-dot-out"></span>Временно не отпускается</div>
+          </div>
+          </section>
+
+          <main>
+          <section id="view-stations" data-view="stations">
+            <div class="panel rounded-3 p-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="panel-title">Список заправок</div>
+                <div id="stationsMeta" class="small soft">-</div>
+              </div>
+              <div class="table-responsive table-scroll">
+                <table class="table table-sm table-hover align-middle mb-0 table-fixed">
+                  <thead>
+                    <tr>
+                      <th style="min-width: 90px;" title="Идентификатор станции" data-bs-toggle="tooltip">ID</th>
+                      <th style="min-width: 180px;" title="Название заправки" data-bs-toggle="tooltip">АЗС</th>
+                      <th style="min-width: 280px;" title="Адрес станции" data-bs-toggle="tooltip">Адрес</th>
+                      <th title="Бензин А-92" data-bs-toggle="tooltip">A-92</th>
+                      <th title="Бензин А-95" data-bs-toggle="tooltip">A-95</th>
+                      <th title="Бензин А-95 Ultra" data-bs-toggle="tooltip">A-95 Ultra</th>
+                      <th title="Бензин А-100" data-bs-toggle="tooltip">A-100</th>
+                      <th title="Дизель" data-bs-toggle="tooltip">ДТ</th>
+                      <th title="Дизель Ultra" data-bs-toggle="tooltip">ДТ Ultra</th>
+                      <th title="Газ" data-bs-toggle="tooltip">Газ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="stationsRows"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-logs" data-view="logs" class="section-hidden">
+            <div class="d-grid gap-3">
+              <div class="row g-3 mx-0">
+                <div class="col-12 col-xl-6">
+                  <div class="panel rounded-3 p-3 h-100">
+                    <div class="panel-title mb-2">Логи по уровням</div>
+                    <div class="chart-wrap"><canvas id="logsLevelDetailChart"></canvas></div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-6">
+                  <div class="panel rounded-3 p-3 h-100">
+                    <div class="panel-title mb-2">Топ сообщений логов</div>
+                    <div class="chart-wrap"><canvas id="logsMessagesChart"></canvas></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel rounded-3 p-3">
+                <div class="panel-title mb-2">Последние логи</div>
+                <div class="table-responsive table-scroll logs-scroll">
+                  <table class="table table-sm table-striped align-middle mb-0 table-fixed">
+                    <thead>
+                      <tr>
+                        <th style="min-width: 180px;" title="Время записи" data-bs-toggle="tooltip">Время</th>
+                        <th style="min-width: 100px;" title="Уровень логирования" data-bs-toggle="tooltip">Уровень</th>
+                        <th style="min-width: 260px;" title="Текст сообщения" data-bs-toggle="tooltip">Сообщение</th>
+                        <th style="min-width: 320px;" title="Дополнительные поля" data-bs-toggle="tooltip">Детали</th>
+                      </tr>
+                    </thead>
+                    <tbody id="logsRows"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-settings" data-view="settings" class="section-hidden">
+            <div class="row g-3 mx-0">
+              <div class="col-12">
+                <div class="panel rounded-3 p-3">
+                  <div class="panel-title mb-2">Тема интерфейса</div>
+                  <div class="row g-2 mx-0 mb-3">
+                    <div class="col-12 col-lg-4">
+                      <label for="themeSelect" class="form-label small soft mb-1">Режим темы</label>
+                      <select id="themeSelect" class="form-select form-select-sm" title="Светлая, темная или системная тема" data-bs-toggle="tooltip">
+                        <option value="system">Системная</option>
+                        <option value="light">Светлая</option>
+                        <option value="dark">Темная</option>
+                      </select>
+                    </div>
+                    <div class="col-12 col-lg-8 d-flex align-items-end">
+                      <div id="themeHint" class="small soft">Активная тема: системная</div>
+                    </div>
+                  </div>
+                  <div class="panel-title mb-2">Публичный runtime-config</div>
+                  <div class="small text-secondary mb-2">
+                    Это технический блок для диагностики текущей конфигурации monitor/api.
+                  </div>
+                  <pre id="configJson" class="mb-0 small soft" style="white-space: pre-wrap;">-</pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+      <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert">
+        <div class="d-flex">
+          <div id="errorToastBody" class="toast-body">Ошибка</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script>
+      const state = {
+        stations: [],
+        logs: [],
+        config: {},
+        health: null,
+        autoRefresh: {
+          seconds: 0,
+          timerId: null,
+          tickerId: null,
+          nextAtMs: 0
+        },
+        refreshInProgress: false,
+        theme: {
+          mode: "system"
+        },
+        charts: {
+          logsLevelDetail: null,
+          logsMessages: null
+        }
+      };
+
+      const els = {
+        dashboardLayout: document.getElementById("dashboardLayout"),
+        sidebar: document.getElementById("sidebar"),
+        sidebarToggleBtn: document.getElementById("sidebarToggleBtn"),
+        routeLinks: Array.from(document.querySelectorAll(".route-link")),
+        views: Array.from(document.querySelectorAll("[data-view]")),
+        stationFilter: document.getElementById("stationFilter"),
+        clearFilterBtn: document.getElementById("clearFilterBtn"),
+        refreshBtn: document.getElementById("refreshBtn"),
+        autoRefreshSelect: document.getElementById("autoRefreshSelect"),
+        autoRefreshProgress: document.getElementById("autoRefreshProgress"),
+        autoRefreshHint: document.getElementById("autoRefreshHint"),
+        themeSelectQuick: document.getElementById("themeSelectQuick"),
+        themeHintTop: document.getElementById("themeHintTop"),
+        themeSelect: document.getElementById("themeSelect"),
+        themeHint: document.getElementById("themeHint"),
+        stationsRows: document.getElementById("stationsRows"),
+        logsRows: document.getElementById("logsRows"),
+        stationsTotal: document.getElementById("stationsTotal"),
+        stationsFiltered: document.getElementById("stationsFiltered"),
+        stationsMeta: document.getElementById("stationsMeta"),
+        updatedAt: document.getElementById("updatedAt"),
+        healthDot: document.getElementById("healthDot"),
+        healthText: document.getElementById("healthText"),
+        configJson: document.getElementById("configJson"),
+        errorToast: document.getElementById("errorToast"),
+        errorToastBody: document.getElementById("errorToastBody")
+      };
+
+      const SIDEBAR_COLLAPSED_KEY = "fuel_atan_sidebar_collapsed";
+      const AUTO_REFRESH_SECONDS_KEY = "fuel_atan_auto_refresh_seconds";
+      const THEME_MODE_KEY = "fuel_atan_theme_mode";
+
+      const FUEL_FIELDS = ["a92", "a95", "a95_ultra", "a100", "diesel", "diesel_ultra", "lpg"];
+      const FUEL_LABELS = {
+        a92: "A-92",
+        a95: "A-95",
+        a95_ultra: "A-95 Ultra",
+        a100: "A-100",
+        diesel: "ДТ",
+        diesel_ultra: "ДТ Ultra",
+        lpg: "Газ"
+      };
+
+      const STATUS_LABELS = {
+        FUEL_STATUS_IN_STOCK: "Есть",
+        FUEL_STATUS_LIMITED: "Талоны",
+        FUEL_STATUS_OUT_OF_STOCK: "Нет",
+        FUEL_STATUS_UNAVAILABLE: "Нет"
+      };
+      const SYSTEM_DARK_QUERY = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+
+      function showError(message) {
+        els.errorToastBody.textContent = message;
+        bootstrap.Toast.getOrCreateInstance(els.errorToast).show();
+      }
+
+      function initTooltips(root = document) {
+        if (!window.bootstrap || !bootstrap.Tooltip) {
+          return;
+        }
+        const nodes = root.querySelectorAll('[data-bs-toggle="tooltip"]');
+        for (const node of nodes) {
+          bootstrap.Tooltip.getOrCreateInstance(node, { boundary: document.body });
+        }
+      }
+
+      function disposeTooltips(root = document) {
+        if (!window.bootstrap || !bootstrap.Tooltip) {
+          return;
+        }
+        const nodes = root.querySelectorAll('[data-bs-toggle="tooltip"]');
+        for (const node of nodes) {
+          const instance = bootstrap.Tooltip.getInstance(node);
+          if (instance) {
+            instance.dispose();
+          }
+        }
+      }
+
+      function updateTooltipTitle(element, text) {
+        if (!element) {
+          return;
+        }
+        element.setAttribute("title", text);
+        element.setAttribute("data-bs-title", text);
+        const instance = bootstrap.Tooltip.getInstance(element);
+        if (instance) {
+          instance.setContent({ ".tooltip-inner": text });
+        }
+      }
+
+      function renderIcons() {
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+          window.lucide.createIcons();
+        }
+      }
+
+      function setSidebarCollapsed(collapsed) {
+        const shouldCollapse = Boolean(collapsed);
+        els.sidebar.classList.toggle("collapsed", shouldCollapse);
+        els.dashboardLayout.classList.toggle("sidebar-collapsed", shouldCollapse);
+        updateTooltipTitle(els.sidebarToggleBtn, shouldCollapse ? "Развернуть меню" : "Свернуть меню");
+
+        const iconNode = els.sidebarToggleBtn.querySelector("[data-lucide]");
+        if (iconNode) {
+          iconNode.setAttribute("data-lucide", shouldCollapse ? "panel-left-open" : "panel-left-close");
+        }
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, shouldCollapse ? "1" : "0");
+        renderIcons();
+        setTimeout(() => {
+          state.charts.logsLevelDetail?.resize();
+          state.charts.logsMessages?.resize();
+        }, 0);
+      }
+
+      function restoreSidebarState() {
+        const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+        const collapsed = stored === "1";
+        setSidebarCollapsed(collapsed);
+      }
+
+      function normalizeThemeMode(value) {
+        return ["system", "light", "dark"].includes(value) ? value : "system";
+      }
+
+      function resolveThemeMode(mode) {
+        if (mode === "light" || mode === "dark") {
+          return mode;
+        }
+        return SYSTEM_DARK_QUERY && SYSTEM_DARK_QUERY.matches ? "dark" : "light";
+      }
+
+      function setThemeMode(mode, persist = true) {
+        const normalized = normalizeThemeMode(mode);
+        const resolved = resolveThemeMode(normalized);
+        state.theme.mode = normalized;
+        document.documentElement.setAttribute("data-bs-theme", resolved);
+        els.themeSelectQuick.value = normalized;
+        els.themeSelect.value = normalized;
+        const modeText = normalized === "system" ? "системная" : normalized === "dark" ? "темная" : "светлая";
+        els.themeHint.textContent = `Активная тема: ${modeText} (${resolved})`;
+        els.themeHintTop.textContent = `Активная тема: ${modeText} (${resolved})`;
+        if (persist) {
+          localStorage.setItem(THEME_MODE_KEY, normalized);
+        }
+      }
+
+      function restoreThemeMode() {
+        const stored = normalizeThemeMode(localStorage.getItem(THEME_MODE_KEY) || "system");
+        setThemeMode(stored, false);
+      }
+
+      function autoRefreshCycleMs() {
+        return Math.max(0, state.autoRefresh.seconds) * 1000;
+      }
+
+      function updateAutoRefreshProgress() {
+        const cycleMs = autoRefreshCycleMs();
+        if (cycleMs <= 0) {
+          els.autoRefreshProgress.style.width = "0%";
+          els.autoRefreshHint.textContent = "Автообновление выключено";
+          return;
+        }
+
+        const remainingMs = Math.max(0, state.autoRefresh.nextAtMs - Date.now());
+        const progressPct = Math.min(100, Math.max(0, ((cycleMs - remainingMs) / cycleMs) * 100));
+        els.autoRefreshProgress.style.width = `${progressPct}%`;
+        els.autoRefreshHint.textContent = `Каждые ${state.autoRefresh.seconds}с, следующий запуск через ${(remainingMs / 1000).toFixed(1)}с`;
+      }
+
+      function stopAutoRefresh() {
+        if (state.autoRefresh.timerId) {
+          clearInterval(state.autoRefresh.timerId);
+          state.autoRefresh.timerId = null;
+        }
+        if (state.autoRefresh.tickerId) {
+          clearInterval(state.autoRefresh.tickerId);
+          state.autoRefresh.tickerId = null;
+        }
+      }
+
+      function resetAutoRefreshCountdown() {
+        const cycleMs = autoRefreshCycleMs();
+        if (cycleMs <= 0) {
+          state.autoRefresh.nextAtMs = 0;
+          updateAutoRefreshProgress();
+          return;
+        }
+        state.autoRefresh.nextAtMs = Date.now() + cycleMs;
+        updateAutoRefreshProgress();
+      }
+
+      function setAutoRefreshSeconds(value, persist = true) {
+        const seconds = Number(value) || 0;
+        stopAutoRefresh();
+        state.autoRefresh.seconds = Math.max(0, seconds);
+        els.autoRefreshSelect.value = String(state.autoRefresh.seconds);
+
+        if (persist) {
+          localStorage.setItem(AUTO_REFRESH_SECONDS_KEY, String(state.autoRefresh.seconds));
+        }
+
+        if (state.autoRefresh.seconds <= 0) {
+          resetAutoRefreshCountdown();
+          return;
+        }
+
+        resetAutoRefreshCountdown();
+        state.autoRefresh.tickerId = setInterval(updateAutoRefreshProgress, 100);
+        state.autoRefresh.timerId = setInterval(async () => {
+          try {
+            await refreshAll();
+          } finally {
+            resetAutoRefreshCountdown();
+          }
+        }, autoRefreshCycleMs());
+      }
+
+      function restoreAutoRefresh() {
+        const storedRaw = localStorage.getItem(AUTO_REFRESH_SECONDS_KEY) || "0";
+        const stored = Number(storedRaw);
+        const allowed = new Set([0, 3, 5, 15, 30]);
+        setAutoRefreshSeconds(allowed.has(stored) ? stored : 0, false);
+      }
+
+      function fuelStatus(station, fuel) {
+        return station?.fuels?.[fuel] || station?.[fuel] || "";
+      }
+
+      function humanStatus(status) {
+        return STATUS_LABELS[status] || "-";
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function fuelStatusDotClass(status) {
+        if (status === "FUEL_STATUS_IN_STOCK") return "fuel-dot-stock";
+        if (status === "FUEL_STATUS_LIMITED") return "fuel-dot-limited";
+        if (status === "FUEL_STATUS_OUT_OF_STOCK" || status === "FUEL_STATUS_UNAVAILABLE") return "fuel-dot-out";
+        return "fuel-dot-na";
+      }
+
+      function fuelStatusDotHtml(status) {
+        const label = humanStatus(status);
+        const cssClass = fuelStatusDotClass(status);
+        const title = status ? `${label} (${status})` : "нет данных";
+        return `<span class="fuel-dot ${cssClass}" title="${title}" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="${title}"></span>`;
+      }
+
+      function stationSearchText(station) {
+        const parts = [station.id, station.uuid, station.title, station.address];
+        for (const fuel of FUEL_FIELDS) {
+          parts.push(fuelStatus(station, fuel), humanStatus(fuelStatus(station, fuel)));
+        }
+        return parts.filter(Boolean).join(" ").toLowerCase();
+      }
+
+      function normalizeCityToken(value) {
+        return String(value || "")
+          .toLowerCase()
+          .replace(/^г\.\s*/u, "")
+          .replace(/^город\s+/u, "")
+          .replace(/\s+/gu, " ")
+          .trim();
+      }
+
+      function looksLikeCityQuery(query) {
+        return /[а-яё]/iu.test(query) && !/[0-9]/.test(query);
+      }
+
+      function stationMatchesCityQuery(station, query) {
+        const normalized = normalizeCityToken(query);
+        if (!normalized) return false;
+
+        const segments = `${station.title || ""},${station.address || ""}`
+          .split(",")
+          .map((segment) => normalizeCityToken(segment))
+          .filter(Boolean);
+
+        return segments.some((segment) => {
+          if (segment === normalized) return true;
+          if (!segment.startsWith(normalized)) return false;
+          const nextChar = segment.charAt(normalized.length);
+          return nextChar === "" || nextChar === " " || nextChar === "." || nextChar === ",";
+        });
+      }
+
+      function filteredStations() {
+        const query = els.stationFilter.value.trim().toLowerCase();
+        if (!query) return state.stations;
+        if (looksLikeCityQuery(query)) {
+          return state.stations.filter((station) => stationMatchesCityQuery(station, query));
+        }
+        return state.stations.filter((station) => stationSearchText(station).includes(query));
+      }
+
+      async function apiGet(url) {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error("API защищен ключом (API_KEY). Для текущего UI режим без ключа.");
+          }
+          throw new Error(`${response.status}: ${data?.error || "Request failed"}`);
+        }
+        return data;
+      }
+
+      function renderRoute(route) {
+        for (const link of els.routeLinks) {
+          link.classList.toggle("active", link.dataset.route === route);
+        }
+        for (const view of els.views) {
+          view.classList.toggle("section-hidden", view.dataset.view !== route);
+        }
+        if (route === "logs") {
+          renderLogsVisuals();
+        }
+      }
+
+      function currentRoute() {
+        const hash = location.hash || "#/stations";
+        const route = hash.replace(/^#\//, "");
+        return ["stations", "logs", "settings"].includes(route) ? route : "stations";
+      }
+
+      function renderStationsTable() {
+        const stations = filteredStations();
+        const visible = stations.slice(0, 250);
+        disposeTooltips(els.stationsRows);
+        els.stationsRows.innerHTML = "";
+        els.stationsTotal.textContent = String(state.stations.length);
+        els.stationsFiltered.textContent = String(stations.length);
+        els.stationsMeta.textContent = `Показано ${visible.length} из ${stations.length}`;
+
+        if (visible.length === 0) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = "<td colspan='10' class='text-secondary'>Нет данных по текущему фильтру</td>";
+          els.stationsRows.appendChild(tr);
+          return;
+        }
+
+        for (const station of visible) {
+          const tr = document.createElement("tr");
+          const fuelCells = [
+            fuelStatus(station, "a92"),
+            fuelStatus(station, "a95"),
+            fuelStatus(station, "a95_ultra"),
+            fuelStatus(station, "a100"),
+            fuelStatus(station, "diesel"),
+            fuelStatus(station, "diesel_ultra"),
+            fuelStatus(station, "lpg")
+          ]
+            .map((status) => `<td class="fuel-cell">${fuelStatusDotHtml(status)}</td>`);
+          const cells = [
+            escapeHtml(station.id || "-"),
+            escapeHtml(station.title || "-"),
+            escapeHtml(station.address || "-"),
+            ...fuelCells
+          ];
+          tr.innerHTML = cells
+            .map((v, index) => (index < 3 ? `<td>${v}</td>` : String(v)))
+            .join("");
+          els.stationsRows.appendChild(tr);
+        }
+        initTooltips(els.stationsRows);
+      }
+
+      function renderLogs() {
+        disposeTooltips(els.logsRows);
+        els.logsRows.innerHTML = "";
+        const rows = state.logs.slice(0, 200);
+        if (rows.length === 0) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = "<td colspan='4' class='text-secondary'>Логи отсутствуют</td>";
+          els.logsRows.appendChild(tr);
+          return;
+        }
+        for (const item of rows) {
+          const level = item.level || "info";
+          const badge =
+            level === "error" || level === "fatal"
+              ? "danger"
+              : level === "warn"
+                ? "warning"
+                : "primary";
+          const ts = escapeHtml(item.ts || "-");
+          const safeLevel = escapeHtml(level);
+          const message = escapeHtml(item.message || "-");
+          const extra = escapeHtml(item.extra ? JSON.stringify(item.extra, null, 2) : "");
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="text-secondary" title="Временная метка записи">${ts}</td>
+            <td><span class="badge text-bg-${badge}" title="Уровень: ${safeLevel}" data-bs-toggle="tooltip">${safeLevel}</span></td>
+            <td title="${message}">${message}</td>
+            <td><pre class="mb-0 small text-secondary" title="Детали лога">${extra}</pre></td>
+          `;
+          els.logsRows.appendChild(tr);
+        }
+        initTooltips(els.logsRows);
+      }
+
+      function destroyChart(chartRef) {
+        if (chartRef) chartRef.destroy();
+      }
+
+      function buildLogsLevelDetailChart() {
+        const counters = { info: 0, warn: 0, error: 0, fatal: 0 };
+        for (const item of state.logs) {
+          const level = item.level || "info";
+          if (level in counters) counters[level] += 1;
+        }
+        destroyChart(state.charts.logsLevelDetail);
+        state.charts.logsLevelDetail = new Chart(document.getElementById("logsLevelDetailChart"), {
+          type: "bar",
+          data: {
+            labels: ["info", "warn", "error", "fatal"],
+            datasets: [
+              {
+                label: "entries",
+                data: [counters.info, counters.warn, counters.error, counters.fatal],
+                backgroundColor: ["#2563eb", "#f59e0b", "#ef4444", "#991b1b"]
+              }
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+      }
+
+      function buildLogsMessagesChart() {
+        const counts = new Map();
+        for (const item of state.logs) {
+          const msg = item.message || "N/A";
+          counts.set(msg, (counts.get(msg) || 0) + 1);
+        }
+        const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+        destroyChart(state.charts.logsMessages);
+        state.charts.logsMessages = new Chart(document.getElementById("logsMessagesChart"), {
+          type: "bar",
+          data: {
+            labels: top.map(([label]) => label),
+            datasets: [{ label: "count", data: top.map(([, value]) => value), backgroundColor: "#334155" }]
+          },
+          options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+
+      function renderConfig() {
+        els.configJson.textContent = JSON.stringify(state.config || {}, null, 2);
+      }
+
+      function renderHealth() {
+        const ok = Boolean(state.health?.ok);
+        els.healthText.textContent = ok ? "OK" : "ERR";
+        els.healthDot.classList.remove("dot-ok", "dot-warn", "dot-bad");
+        els.healthDot.classList.add(ok ? "dot-ok" : "dot-bad");
+      }
+
+      function renderLogsVisuals() {
+        buildLogsLevelDetailChart();
+        buildLogsMessagesChart();
+        setTimeout(() => {
+          state.charts.logsLevelDetail?.resize();
+          state.charts.logsMessages?.resize();
+        }, 0);
+      }
+
+      async function refreshAll() {
+        if (state.refreshInProgress) {
+          return;
+        }
+        state.refreshInProgress = true;
+        els.refreshBtn.disabled = true;
+        try {
+          const [health, config, snapshot, recent] = await Promise.all([
+            apiGet("/health"),
+            apiGet("/config/public"),
+            apiGet("/snapshot/current"),
+            apiGet("/events/recent?limit=200")
+          ]);
+
+          state.health = health;
+          state.config = config.config || {};
+          state.stations = Array.isArray(snapshot.snapshot) ? snapshot.snapshot : [];
+          state.logs = Array.isArray(recent.records) ? recent.records : [];
+
+          renderHealth();
+          renderConfig();
+          renderStationsTable();
+          renderLogs();
+          const route = currentRoute();
+          if (route === "logs") renderLogsVisuals();
+          els.updatedAt.textContent = new Date().toLocaleString("ru-RU");
+          updateAutoRefreshProgress();
+        } catch (error) {
+          showError(error instanceof Error ? error.message : String(error));
+        } finally {
+          state.refreshInProgress = false;
+          els.refreshBtn.disabled = false;
+        }
+      }
+
+      function bindEvents() {
+        window.addEventListener("hashchange", () => renderRoute(currentRoute()));
+        window.addEventListener("resize", () => {
+          if (currentRoute() === "logs") {
+            state.charts.logsLevelDetail?.resize();
+            state.charts.logsMessages?.resize();
+          }
+        });
+        els.refreshBtn.addEventListener("click", async () => {
+          await refreshAll();
+          resetAutoRefreshCountdown();
+        });
+        els.stationFilter.addEventListener("input", () => renderStationsTable());
+        els.clearFilterBtn.addEventListener("click", () => {
+          els.stationFilter.value = "";
+          renderStationsTable();
+        });
+        els.autoRefreshSelect.addEventListener("change", () => {
+          setAutoRefreshSeconds(Number(els.autoRefreshSelect.value) || 0, true);
+        });
+        els.themeSelect.addEventListener("change", () => {
+          setThemeMode(els.themeSelect.value, true);
+        });
+        els.themeSelectQuick.addEventListener("change", () => {
+          setThemeMode(els.themeSelectQuick.value, true);
+        });
+        els.sidebarToggleBtn.addEventListener("click", () => {
+          const collapsed = !els.sidebar.classList.contains("collapsed");
+          setSidebarCollapsed(collapsed);
+        });
+
+        if (SYSTEM_DARK_QUERY && typeof SYSTEM_DARK_QUERY.addEventListener === "function") {
+          SYSTEM_DARK_QUERY.addEventListener("change", () => {
+            if (state.theme.mode === "system") {
+              setThemeMode("system", false);
+            }
+          });
+        }
+      }
+
+      function init() {
+        restoreThemeMode();
+        restoreSidebarState();
+        restoreAutoRefresh();
+        bindEvents();
+        renderIcons();
+        initTooltips();
+        renderRoute(currentRoute());
+        refreshAll();
+      }
+
+      init();
+    </script>
+  </body>
+</html>

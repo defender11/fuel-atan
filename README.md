@@ -24,6 +24,38 @@
 ```bash
 npm install
 npm run start
+npm run start:api
+```
+
+### Как запускать все сервисы
+- Из исходников:
+```bash
+npm install
+npm run start
+npm run start:api
+```
+
+- Dashboard URL:
+- `http://localhost:4010/`
+- `http://localhost:4010/dashboard`
+
+- Из dist:
+```bash
+npm run build
+npm run start:dist:monitor
+npm run start:dist:api
+```
+
+- Через PM2:
+```bash
+npm run build
+npm run pm2:start:all
+npm run pm2:logs:all
+```
+
+Сборка production-артефактов:
+```bash
+npm run build
 ```
 
 Приоритет конфигов:
@@ -44,6 +76,7 @@ npm run test-telegram
 Запуск с автоперезапуском в разработке:
 ```bash
 npm run dev
+npm run dev:api
 ```
 
 Старт с очисткой состояния (удаляет `data/state.json`):
@@ -62,6 +95,63 @@ npm run pm2:start
 npm run pm2:logs
 npm run pm2:restart
 ```
+
+## Встроенный API для дашборда
+- `GET /health` — health-check (без авторизации).
+- `GET /snapshot/current` — текущий снимок АЗС из state.
+- `GET /events/recent?limit=50` — последние записи из daily логов.
+- `GET /config/public` — публичная часть runtime-конфига.
+
+Запуск API:
+```bash
+npm run start:api
+```
+
+Dashboard доступен по адресу:
+- `http://localhost:4010/`
+- `http://localhost:4010/dashboard`
+
+Если задан `API_KEY`, для endpoint-ов кроме `/health` нужно передавать header `x-api-key`.
+
+## Docker запуск
+- Быстрый запуск стека: `./docker/up.sh`
+- Compose-файл: `docker/docker-compose.yml`
+- Подробная инструкция: `docker/README.md`
+
+## Dashboard
+- Исходники UI: `apps/dashboard/index.html`.
+- Dashboard работает только через API.
+- Разделы SPA: `Stations`, `Logs`, `Settings`.
+- Автообновление данных через Bootstrap select: `Выключить / 3 / 5 / 15 / 30 секунд`.
+- Для автообновления показывается мини-прогресс цикла и обратный отсчет до следующего обновления.
+- Переключение темы в `Settings`: `Системная / Светлая / Темная` (сохранение выбора в `localStorage`).
+- Для основных контролов, меню, статусов и таблиц включены tooltip-подсказки.
+- В таблице топлива статусы отображаются цветными кружками по легенде.
+- Локальные URL:
+- `http://localhost:4010/`
+- `http://localhost:4010/dashboard`
+
+## Сборка в один файл (Stage 4)
+Команда:
+```bash
+npm run build
+```
+
+Результат в `dist/`:
+- `dist/monitor.js` — single-file bundle monitor.
+- `dist/api.js` — single-file bundle API.
+- `dist/index.html` — single-file dashboard.
+
+Запуск dist-артефактов:
+```bash
+npm run start:dist:monitor
+npm run start:dist:api
+```
+
+## CI и smoke (Stage 5)
+- `npm run ci` запускает: `check -> build -> test:smoke`.
+- Smoke-тест API: `npm run test:smoke`.
+- GitHub Actions pipeline: `.github/workflows/ci.yml`.
 
 ## Переменные окружения
 - `ATAN_API_URL` - URL API ATAN.
@@ -84,10 +174,17 @@ npm run pm2:restart
 - `FILE_LOGGING_ENABLED` - писать ли JSON-логи в файлы (`true/false`).
 - `LOG_DIR` - директория для daily логов (по умолчанию `./data/logs`).
 - `LOG_RETENTION_DAYS` - сколько дней хранить лог-файлы (по умолчанию `2`).
+- `API_HOST` - host для встроенного API (по умолчанию `0.0.0.0`).
+- `API_PORT` - порт встроенного API (по умолчанию `4010`).
+- `API_KEY` - ключ для защиты API endpoint-ов (если пусто, защита выключена).
+- `DASHBOARD_FILE` - путь к HTML dashboard, который отдает API (опционально).
 
 ## Структура документации
 - Проектная цель и контекст: `agency.md`
+- План этапов и статусов: `PLAN.md`
 - Бизнес-правила: `SPEC.md`
 - Контракт API: `API_CONTRACT.md`
 - Эксплуатация и cron: `OPERATIONS.md`
+- Runbook эксплуатации: `docs/RUNBOOK.md`
+- Docker деплой и запуск: `docker/README.md`
 - Пример ответа API: `response.md`
