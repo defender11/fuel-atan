@@ -58,6 +58,12 @@ docker compose -f docker/docker-compose.yml up -d --build --no-deps monitor
 docker compose -f docker/docker-compose.yml logs -f monitor
 ```
 
+Тестовое сообщение в Telegram без запуска постоянной чекалки:
+
+```bash
+./docker/test-telegram.sh
+```
+
 Остановить только чекалку:
 
 ```bash
@@ -79,6 +85,12 @@ docker compose -f docker/docker-compose.yml down --rmi local -v
 
 ```bash
 docker compose -f docker/docker-compose.yml up -d --build
+```
+
+Если нужна только Telegram-чекалка:
+
+```bash
+./docker/up-monitor.sh
 ```
 
 ## Примечания

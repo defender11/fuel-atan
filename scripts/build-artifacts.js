@@ -150,6 +150,7 @@ async function buildDashboard() {
 async function main() {
   const monitorOut = await bundleEntry("index.js", "monitor.js");
   const apiOut = await bundleEntry("api.js", "api.js");
+  const telegramTestOut = await bundleEntry("test-telegram.js", "test-telegram.js");
   const dashboardOut = await buildDashboard();
 
   console.log(
@@ -158,6 +159,7 @@ async function main() {
       artifacts: {
         monitor: monitorOut,
         api: apiOut,
+        telegramTest: telegramTestOut,
         dashboard: dashboardOut
       }
     })
